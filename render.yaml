@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: artemide-api-free
+    runtime: docker
+    plan: free
+    region: singapore
+    branch: main
+    dockerfilePath: ./core-v2.5/Dockerfile.render
+    dockerContext: ./core-v2.5
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    envVars:
+      - key: ARTEMIDE_API_KEY
+        generateValue: true
+      - key: ARTEMIDE_ADMIN_API_KEY
+        generateValue: true
+      - key: ARTEMIDE_REQUIRE_API_KEY
+        value: "true"
