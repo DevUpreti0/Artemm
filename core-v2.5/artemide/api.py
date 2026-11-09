@@ -36,7 +36,7 @@ def create_app(model=None, tokenizer=None, device=None, *, api_key: Optional[str
         top_k: int = Field(default=40, ge=0, le=259)
 
     class OpenAIChatRequest(BaseModel):
-        model: str = Field(default="artemide-core-2.5", min_length=1, max_length=128)
+        model: str = Field(default="artemide-core-2.0", min_length=1, max_length=128)
         messages: list[ChatMessage] = Field(min_length=1, max_length=32)
         max_tokens: int = Field(default=128, ge=1, le=2048)
         temperature: float = Field(default=0.0, ge=0.0, le=2.0)
@@ -48,7 +48,7 @@ def create_app(model=None, tokenizer=None, device=None, *, api_key: Optional[str
         requests_per_minute: int = Field(default=60, ge=1, le=10000)
         monthly_token_limit: int = Field(default=100000, ge=1, le=1000000000)
 
-    app = FastAPI(title="Artemide API", version="2.5.2")
+    app = FastAPI(title="Artemide API", version="2.3.0")
     state = {"model": model, "tokenizer": tokenizer, "device": device}
     if state["model"] is None:
         config = os.getenv("ARTEMIDE_CONFIG")
@@ -101,7 +101,7 @@ def create_app(model=None, tokenizer=None, device=None, *, api_key: Optional[str
         return {
             "status": "ok" if state["model"] is not None else "offline",
             "model_loaded": state["model"] is not None,
-            "version": "2.5.2",
+            "version": "2.3.0",
             "streaming": True,
             "openai_compatible": True,
         }
@@ -112,7 +112,7 @@ def create_app(model=None, tokenizer=None, device=None, *, api_key: Optional[str
         return {
             "object": "list",
             "data": [{
-                "id": "artemide-core-2.5",
+                "id": "artemide-core-2.0",
                 "object": "model",
                 "created": 0,
                 "owned_by": "artemide",
@@ -130,7 +130,7 @@ def create_app(model=None, tokenizer=None, device=None, *, api_key: Optional[str
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
         record_usage(identity, request.prompt, output)
-        return {"text": output, "model": "artemide-core-2.5", "finish_reason": "length"}
+        return {"text": output, "model": "artemide-core-2.0", "finish_reason": "length"}
 
     @app.post("/v1/stream")
     def stream(request: GenerateRequest, authorization: Optional[str] = Header(default=None)):
@@ -150,7 +150,7 @@ def create_app(model=None, tokenizer=None, device=None, *, api_key: Optional[str
                     collected.append(fragment)
                     yield "data: " + json.dumps({"delta": fragment}, ensure_ascii=False) + "\n\n"
                 record_usage(identity, request.prompt, "".join(collected))
-                yield "data: " + json.dumps({"done": True, "model": "artemide-core-2.5"}) + "\n\n"
+                yield "data: " + json.dumps({"done": True, "model": "artemide-core-2.0"}) + "\n\n"
             except Exception as exc:
                 yield "data: " + json.dumps({"error": "Generation failed: " + type(exc).__name__}) + "\n\n"
 
@@ -173,7 +173,7 @@ def create_app(model=None, tokenizer=None, device=None, *, api_key: Optional[str
         record_usage(identity, prompt, output)
         return {
             "message": {"role": "assistant", "content": output},
-            "model": "artemide-core-2.5",
+            "model": "artemide-core-2.0",
             "note": "Chat formatting is not instruction tuning.",
         }
 
@@ -183,7 +183,7 @@ def create_app(model=None, tokenizer=None, device=None, *, api_key: Optional[str
         prompt = validate_messages(request.messages)
         completion_id = "chatcmpl-" + uuid.uuid4().hex
         created = int(time.time())
-        model_name = "artemide-core-2.5"
+        model_name = "artemide-core-2.0"
         if request.model != model_name:
             raise HTTPException(status_code=400, detail=f"Unsupported model. Use {model_name}.")
 
