@@ -101,7 +101,7 @@ def create_app(model=None, tokenizer=None, device=None, *, api_key: Optional[str
         return {
             "status": "ok" if state["model"] is not None else "offline",
             "model_loaded": state["model"] is not None,
-            "version": "2.0.0",
+            "version": "2.3.0",
             "streaming": True,
             "openai_compatible": True,
         }
@@ -149,6 +149,7 @@ def create_app(model=None, tokenizer=None, device=None, *, api_key: Optional[str
                 for fragment in fragments:
                     collected.append(fragment)
                     yield "data: " + json.dumps({"delta": fragment}, ensure_ascii=False) + "\n\n"
+                record_usage(identity, request.prompt, "".join(collected))
                 yield "data: " + json.dumps({"done": True, "model": "artemide-core-2.0"}) + "\n\n"
             except Exception as exc:
                 yield "data: " + json.dumps({"error": "Generation failed: " + type(exc).__name__}) + "\n\n"
