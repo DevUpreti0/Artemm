@@ -4,6 +4,7 @@ from artemide.model.config import ModelConfig
 from artemide.model.transformer import ArtemideLM
 from artemide.tokenizer import ByteTokenizer
 from artemide.training.checkpoint import load_checkpoint
+from artemide.chat import format_chat_prompt
 
 class InferenceRuntime:
     def __init__(self, checkpoint, config_path, device=None):
@@ -20,3 +21,9 @@ class InferenceRuntime:
         input_ids=torch.tensor([ids],dtype=torch.long,device=self.device)
         output=self.model.generate(input_ids,max_new_tokens=max_new_tokens,temperature=temperature,top_k=top_k)
         return self.tokenizer.decode(output[0].tolist()[len(ids):])
+
+    @torch.inference_mode()
+    def generate_chat(self, messages, max_new_tokens=128, temperature=0.8, top_k=40):
+        """Generate from serialized chat context; this is not instruction tuning."""
+        prompt = format_chat_prompt(messages)
+        return self.generate(prompt, max_new_tokens, temperature, top_k)

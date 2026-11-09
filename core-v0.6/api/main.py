@@ -4,14 +4,25 @@ from fastapi import FastAPI, Header, HTTPException
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 from artemide.inference import InferenceRuntime
+from artemide.chat import ChatMessage
 
-app=FastAPI(title="Artemide Core API",version="0.6.0")
+app=FastAPI(title="Artemide Core API",version="0.7.0")
 API_KEY=os.getenv("ARTEMIDE_API_KEY","")
 class GenerateRequest(BaseModel):
     prompt: str=Field(min_length=1,max_length=6000)
     max_new_tokens: int=Field(default=128,ge=1,le=512)
     temperature: float=Field(default=0.8,ge=0.05,le=2.0)
     top_k: int=Field(default=40,ge=0,le=259)
+
+class ChatMessageRequest(BaseModel):
+    role: str = Field(pattern="^(system|user|assistant)$")
+    content: str = Field(min_length=1, max_length=6000)
+
+class ChatRequest(BaseModel):
+    messages: list[ChatMessageRequest] = Field(min_length=1, max_length=32)
+    max_new_tokens: int = Field(default=128, ge=1, le=512)
+    temperature: float = Field(default=0.8, ge=0.05, le=2.0)
+    top_k: int = Field(default=40, ge=0, le=259)
 
 @lru_cache(maxsize=1)
 def runtime():
@@ -29,7 +40,7 @@ def auth(key):
 def health():
     try:
         model=runtime()
-        return {"status":"ok","model":"Artemide Core","version":"0.6.0","generation_ready":True,"step":model.step}
+        return {"status":"ok","model":"Artemide Core","version":"0.7.0","generation_ready":True,"step":model.step}
     except Exception as exc:
         return {"status":"degraded","model":"Artemide Core","version":"0.6.0","generation_ready":False,"reason":str(exc)}
 
@@ -50,6 +61,23 @@ def generate(body: GenerateRequest, authorization: str|None=Header(default=None)
         text=model.generate(body.prompt,body.max_new_tokens,body.temperature,body.top_k)
         return {"response":text,"model":"Artemide Core","step":model.step}
     except Exception as exc: raise HTTPException(500,f"Generation failed: {exc}")
+
+@app.post("/v1/chat")
+def chat(body: ChatRequest, authorization: str|None=Header(default=None)):
+    auth(authorization)
+    try:
+        model = runtime()
+    except Exception as exc:
+        raise HTTPException(503, str(exc))
+    try:
+        messages = [ChatMessage(role=item.role, content=item.content) for item in body.messages]
+        text = model.generate_chat(messages, body.max_new_tokens, body.temperature, body.top_k)
+        return {"response": text, "model": "Artemide Core", "step": model.step,
+                "note": "Base-model chat serialization; instruction tuning is not included."}
+    except ValueError as exc:
+        raise HTTPException(422, str(exc))
+    except Exception as exc:
+        raise HTTPException(500, f"Chat generation failed: {exc}")
 
 @app.get("/dashboard",response_class=HTMLResponse)
 def dashboard():
