@@ -1,0 +1,17 @@
+[build-system]
+requires=["setuptools>=68","wheel"]
+build-backend="setuptools.build_meta"
+[project]
+name="artemide-core"
+version="1.9.0"
+description="Independent decoder-only language model research stack"
+requires-python=">=3.10"
+dependencies=["torch>=2.1"]
+[project.optional-dependencies]
+api=["fastapi>=0.110","uvicorn[standard]>=0.27"]
+dev=["pytest>=8","httpx>=0.27"]
+[project.scripts]
+artemide="artemide.cli:main"
+[tool.setuptools.packages.find]
+where=["."]
+include=["artemide*"]

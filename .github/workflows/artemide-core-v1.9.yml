@@ -1,0 +1,28 @@
+name: Artemide Core v1.9
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "core-v1.9/**"
+      - ".github/workflows/artemide-core-v1.9.yml"
+  pull_request:
+    paths:
+      - "core-v1.9/**"
+      - ".github/workflows/artemide-core-v1.9.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install CPU PyTorch and test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+          python -m pip install -e "./core-v1.9[dev,api]"
+      - name: Run v1.9 test suite
+        run: python -m pytest core-v1.9/tests -q
