@@ -3,7 +3,7 @@ requires=["setuptools>=68","wheel"]
 build-backend="setuptools.build_meta"
 [project]
 name="artemide-core"
-version="1.7.0"
+version="1.8.0"
 description="Independent decoder-only language model research stack"
 requires-python=">=3.10"
 dependencies=["torch>=2.1"]
