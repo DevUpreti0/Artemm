@@ -51,15 +51,16 @@ class StreamingArtemideLM(ArtemideLM):
             return
         cache = KVCache(max_length=self.config.max_seq_len) if use_cache else None
         logits = self.forward(prompt, cache=cache, use_cache=use_cache)[:, -1, :]
-        for step in range(min(max_new_tokens, self.config.max_seq_len - prompt.shape[1])):
+        limit = min(max_new_tokens, self.config.max_seq_len - prompt.shape[1])
+        generated = []
+        for step in range(limit):
             token = self._sample(logits, temperature, top_k)
             yield token
-            if step + 1 >= min(max_new_tokens, self.config.max_seq_len - prompt.shape[1]):
+            if step + 1 >= limit:
                 break
             if use_cache:
                 logits = self.forward(token, cache=cache, use_cache=True)[:, -1, :]
             else:
-                # Rebuild context only when caching is disabled.
                 prefix = torch.cat((prompt, *generated), dim=1) if generated else prompt
                 logits = self.forward(torch.cat((prefix, token), dim=1)[:, -self.config.max_seq_len:])[:, -1, :]
             if not use_cache:
