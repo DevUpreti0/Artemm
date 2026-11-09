@@ -1,12 +1,26 @@
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
   const base = process.env.ARTEMIDE_API_URL;
-  if (!base) return res.status(200).json({ connected: false, model: null, version: "v0.6-dev", reason: "ARTEMIDE_API_URL is not configured" });
+  if (!base) return res.status(200).json({
+    connected: false, model: null, version: "v1.8.0", streaming: true,
+    reason: "ARTEMIDE_API_URL is not configured"
+  });
   try {
     const response = await fetch(new URL("/health", base), { signal: AbortSignal.timeout(5000) });
     const data = await response.json().catch(() => ({}));
-    return res.status(200).json({ connected: response.ok, model: data.model || data.model_name || null, version: data.version || "v0.6-dev", upstreamStatus: response.status });
+    const loaded = data.model_loaded === true;
+    return res.status(200).json({
+      connected: response.ok && loaded,
+      model: data.model || data.model_name || (loaded ? "Artemide Core" : "Not loaded"),
+      version: data.version || "unknown",
+      streaming: data.streaming === true,
+      upstreamStatus: response.status,
+      reason: loaded ? null : "The API is reachable, but no model checkpoint is loaded"
+    });
   } catch (error) {
-    return res.status(200).json({ connected: false, model: null, version: "v0.6-dev", reason: "Inference service did not respond" });
+    return res.status(200).json({
+      connected: false, model: null, version: "unreachable", streaming: false,
+      reason: "Inference service did not respond"
+    });
   }
 }
