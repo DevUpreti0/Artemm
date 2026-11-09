@@ -5,6 +5,7 @@ from artemide import ArtemideLM, ModelConfig, ByteTokenizer
 from artemide.data import prepare_corpus, TokenStream
 from artemide.training import save_checkpoint, load_checkpoint
 from artemide.trainer import build_scheduler, validate
+from artemide.inference import generate_text, stream_text
 
 def tiny():
     torch.manual_seed(3)
@@ -26,6 +27,14 @@ def test_model_forward_and_cached_generation():
     plain=model.generate(prompt,4,temperature=0,use_cache=False)
     assert torch.equal(cached,plain)
     assert cached.shape==(1,7)
+
+def test_streaming_matches_non_streaming_greedy_and_is_utf8_safe():
+    model=tiny()
+    tokenizer=ByteTokenizer()
+    prompt="Artemide stream test"
+    expected=generate_text(model,tokenizer,prompt,device=torch.device("cpu"),max_new_tokens=8,temperature=0)
+    actual="".join(stream_text(model,tokenizer,prompt,device=torch.device("cpu"),max_new_tokens=8,temperature=0))
+    assert actual==expected
 
 def test_corpus_prepare_and_stream(tmp_path):
     source=tmp_path/"src"; source.mkdir()
