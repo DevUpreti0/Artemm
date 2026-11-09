@@ -74,7 +74,7 @@ def create_app(model=None, tokenizer=None, device=None, *, api_key: Optional[str
             except QuotaExceeded as exc:
                 raise HTTPException(status_code=429, detail=str(exc)) from exc
         if identity is None:
-            if secret or key_store.has_active_keys() or os.getenv("ARTEMIDE_REQUIRE_API_KEY", "").lower() in {"1","true","yes"}:
+            if bearer or secret or key_store.has_active_keys() or os.getenv("ARTEMIDE_REQUIRE_API_KEY", "").lower() in {"1","true","yes"}:
                 raise HTTPException(status_code=401, detail="Missing or invalid API key")
             identity = {"key_id": None, "usage_id": None, "label": "development-open"}
         return identity
