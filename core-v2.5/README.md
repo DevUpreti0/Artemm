@@ -45,7 +45,7 @@ The API includes native text generation, SSE streaming, OpenAI-compatible chat c
 
 ## Deployment
 
-For a ₹0/month setup using hardware you already own, follow [the zero-budget self-hosting guide](deploy/README.md). It uses local CPU inference and optionally a temporary free HTTPS tunnel. No paid cloud resources are started automatically.
+Use Docker Compose in this package for a single-instance CPU starting point. Keep secrets server-side and expose the service only behind TLS. For CUDA, use a PyTorch wheel compatible with the host runtime and NVIDIA Container Toolkit. No paid cloud resources are started automatically.
 
 ## Current limits
 

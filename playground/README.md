@@ -1,24 +1,24 @@
 # Artemide Playground
 
-The static chat interface is deployed separately from the model runtime. It does not itself contain an AI model and never substitutes another provider.
+A static chat playground and server-side proxy for the independently built Artemide inference API.
 
-## Zero-budget connection
+## Deploy
 
-With a ₹0/month hosting budget, run Artemide Core on a computer you already own. Follow [the zero-budget self-hosting guide](../core-v2.5/deploy/README.md). For temporary access from this hosted playground, use the optional Cloudflare Quick Tunnel instructions there.
+This directory is intended to be the Vercel project root.
 
-Configure these server-side Vercel environment variables only after your local API is running:
+## Connect a running model
 
-- `ARTEMIDE_API_URL`: HTTPS base URL of the temporary tunnel.
-- `ARTEMIDE_API_KEY`: a developer API key accepted by the local Artemide API. Never use the admin key.
+Set these environment variables in the Vercel project:
 
-The API must expose `GET /health` and `POST /v1/stream` (SSE). The proxy forwards the stream; it does not generate answers itself.
+- `ARTEMIDE_API_URL`: base URL of the running Artemide inference service (for example, an HTTPS service URL).
+- `ARTEMIDE_API_KEY`: optional bearer token for the inference service.
 
-A Quick Tunnel URL changes when restarted. Keep the computer, Docker service and tunnel running. Update the Vercel variable and redeploy when the URL changes.
+The service must expose:
+- `GET /health`
+- `POST /v1/generate` accepting JSON `{ "prompt": "...", "max_new_tokens": 256, "temperature": 0.8 }`
 
-## Important model limitation
-
-The bundled small random-initialized checkpoint is only a startup smoke test. It is not trained to follow instructions and its output is not useful assistant-quality language. A useful model requires permitted training data, training time, evaluation and hardware. This guide starts no paid resources.
+The playground intentionally does not use another provider or fabricate responses. Without a connected runtime, it displays an offline status and a clear error when a prompt is submitted.
 
 ## Security
 
-Keep API/admin keys server-side. Never commit secrets to GitHub or place them in browser JavaScript. Do not expose the admin endpoint to the public internet.
+API credentials are stored only as Vercel server-side environment variables and are never embedded in browser code. Use HTTPS for the inference service.
