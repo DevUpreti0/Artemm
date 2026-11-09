@@ -15,7 +15,10 @@ Set these environment variables in the Vercel project:
 
 The service must expose:
 - `GET /health`
-- `POST /v1/generate` accepting JSON `{ "prompt": "...", "max_new_tokens": 256, "temperature": 0.8 }`
+- `POST /v1/stream` accepting JSON `{ "prompt": "...", "max_new_tokens": 256, "temperature": 0.8 }` and returning Server-Sent Events (SSE).
+- `POST /v1/generate` for non-streaming generation.
+
+The playground proxy forwards the SSE stream from `/v1/stream`; it does not generate answers itself. Set `ARTEMIDE_API_URL` only after the self-hosted service is reachable over HTTPS and has a checkpoint loaded. A randomly initialized checkpoint is only a smoke test and will not behave like a trained assistant.
 
 The playground intentionally does not use another provider or fabricate responses. Without a connected runtime, it displays an offline status and a clear error when a prompt is submitted.
 
