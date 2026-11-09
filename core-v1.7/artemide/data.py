@@ -8,6 +8,7 @@ import os
 import random
 import tempfile
 from pathlib import Path
+import torch
 from typing import Iterable
 
 from .tokenizer import ByteTokenizer
