@@ -12,8 +12,14 @@ def load_tokens(path,device):
     return data.to(device)
 
 def get_batch(tokens,batch_size,seq_len):
-    if tokens.numel()<=seq_len: raise ValueError(f"Dataset needs more than seq_len={seq_len} tokens; found {tokens.numel()}")
-    starts=torch.randint(0,tokens.numel()-seq_len-1,(batch_size,),device=tokens.device)
+    if seq_len < 1:
+        raise ValueError("seq_len must be positive")
+    if batch_size < 1:
+        raise ValueError("batch_size must be positive")
+    if tokens.numel() <= seq_len:
+        raise ValueError(f"Dataset needs at least seq_len+1={seq_len+1} tokens; found {tokens.numel()}")
+    # Valid starts are 0..(N-seq_len-1), inclusive. randint's high bound is exclusive.
+    starts=torch.randint(0,tokens.numel()-seq_len,(batch_size,),device=tokens.device)
     x=torch.stack([tokens[i:i+seq_len] for i in starts])
     y=torch.stack([tokens[i+1:i+seq_len+1] for i in starts])
     return x,y
