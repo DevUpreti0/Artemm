@@ -1,0 +1,1 @@
+{"name":"@artemide-ai/client","version":"0.2.2","description":"Dependency-free JavaScript SDK for Artemide","type":"module","exports":"./index.mjs","engines":{"node":">=18"},"license":"UNLICENSED"}

@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+build/
+dist/
+runs/
+data/
+.env
+
+# Local developer API key database
+artemide_api_keys.sqlite3*

@@ -1,0 +1,10 @@
+[build-system]
+requires=["setuptools>=68","wheel"]
+build-backend="setuptools.build_meta"
+[project]
+name="artemide-client"
+version="0.2.2"
+description="Dependency-free Python SDK for the Artemide API"
+requires-python=">=3.10"
+[tool.setuptools]
+py-modules=["artemide_client"]
