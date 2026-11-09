@@ -82,7 +82,8 @@ def stream_text(model, tokenizer, prompt, *, device, max_new_tokens=128, tempera
                         yield tail
                     return
                 if 3 <= token_id < tokenizer.vocab_size:
-                    fragment = decoder.decode(bytes([token_id - 3]), final=False)
+                    token_bytes = tokenizer.token_bytes(token_id) if hasattr(tokenizer, "token_bytes") else bytes([token_id - 3])
+                    fragment = decoder.decode(token_bytes, final=False)
                     if fragment:
                         yield fragment
                 if index + 1 >= max_new_tokens or input_ids.shape[1] + index + 1 >= model.config.max_seq_len:

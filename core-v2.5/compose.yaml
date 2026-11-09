@@ -8,6 +8,7 @@ services:
       ARTEMIDE_CONFIG: /models/config.json
       ARTEMIDE_CHECKPOINT: /models/latest.pt
       ARTEMIDE_KEY_DB: /data/api_keys.sqlite3
+      ARTEMIDE_TOKENIZER: ${ARTEMIDE_TOKENIZER:-}
       ARTEMIDE_REQUIRE_API_KEY: "1"
       ARTEMIDE_API_KEY: ${ARTEMIDE_API_KEY:-}
       ARTEMIDE_ADMIN_API_KEY: ${ARTEMIDE_ADMIN_API_KEY:?Set ARTEMIDE_ADMIN_API_KEY in .env}

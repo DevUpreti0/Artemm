@@ -106,6 +106,12 @@ class BPETokenizer:
         flush()
         return "".join(pieces)
 
+    def token_bytes(self, token_id):
+        token_id=int(token_id)
+        if token_id < 3 or token_id >= self.vocab_size:
+            raise ValueError(f"token ID {token_id} is not a text token")
+        return self._token_bytes[token_id]
+
     def save(self,path):
         destination=Path(path); destination.parent.mkdir(parents=True,exist_ok=True)
         payload={"format":self.format_name,"vocab_size":self.vocab_size,"merges":[list(p) for p in self.merges]}

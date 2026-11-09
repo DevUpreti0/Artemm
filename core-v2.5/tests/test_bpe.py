@@ -33,3 +33,13 @@ def test_bpe_corpus_prep_writes_model_compatible_ids(tmp_path):
 def test_bpe_rejects_invalid_vocab_size():
     with pytest.raises(ValueError):
         BPETokenizer.train(["x"],vocab_size=70000)
+
+def test_bpe_streaming_matches_full_generation():
+    from artemide import ArtemideLM, ModelConfig
+    from artemide.inference import generate_text, stream_text
+    tok=BPETokenizer.train(["repeat repeat repeat","repeat token repeat"],vocab_size=270,min_frequency=2)
+    model=ArtemideLM(ModelConfig(vocab_size=tok.vocab_size,d_model=32,n_layers=1,n_heads=4,max_seq_len=64)).eval()
+    prompt="repeat token"
+    expected=generate_text(model,tok,prompt,device=torch.device("cpu"),max_new_tokens=8,temperature=0)
+    actual="".join(stream_text(model,tok,prompt,device=torch.device("cpu"),max_new_tokens=8,temperature=0))
+    assert actual==expected
