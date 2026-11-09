@@ -6,7 +6,7 @@ from .data import prepare_corpus, TokenStream
 from .inference import load_model, generate_text
 from .model.config import ModelConfig
 from .model.transformer import ArtemideLM
-from .trainer import train
+from .trainer import run_training
 
 def main():
     parser=argparse.ArgumentParser(prog="artemide")
@@ -39,7 +39,7 @@ def main():
         device=torch.device("cuda" if torch.cuda.is_available() else "cpu")
         model=ArtemideLM(config).to(device); train_data=TokenStream(args.train,config.vocab_size)
         val_data=TokenStream(args.validation,config.vocab_size) if args.validation else None
-        print(json.dumps(train(model,train_data,output_dir=args.output,steps=args.steps,batch_size=args.batch_size,
+        print(json.dumps(run_training(model,train_data,output_dir=args.output,steps=args.steps,batch_size=args.batch_size,
             sequence_length=args.sequence_length,learning_rate=args.learning_rate,weight_decay=args.weight_decay,
             warmup_steps=args.warmup_steps,grad_accum_steps=args.grad_accum_steps,precision=args.precision,
             validation_data=val_data,validation_interval=args.validation_interval,
