@@ -1,5 +1,6 @@
 """Minimal FastAPI inference service for a trusted local Artemide checkpoint."""
 from __future__ import annotations
+import json
 import os
 from pathlib import Path
 from threading import Lock
@@ -31,7 +32,12 @@ def _load_model():
     config_path = os.environ.get("ARTEMIDE_CONFIG")
     if not checkpoint or not config_path:
         raise RuntimeError("Set ARTEMIDE_CHECKPOINT and ARTEMIDE_CONFIG")
-    config = ModelConfig(**__import__("json").loads(Path(config_path).read_text(encoding="utf-8")))
+    config = ModelConfig(**json.loads(Path(config_path).read_text(encoding="utf-8")))
+    if config.vocab_size != _tokenizer.vocab_size:
+        raise RuntimeError(
+            f"API byte tokenizer vocabulary ({_tokenizer.vocab_size}) "
+            f"does not match model vocabulary ({config.vocab_size})"
+        )
     model = ArtemideLM(config).to(_device)
     load_checkpoint(checkpoint, model, map_location=_device, restore_rng=False)
     model.eval()
@@ -41,8 +47,12 @@ def _load_model():
 
 @app.get("/health")
 def health():
-    ready = _model is not None
-    return {"status": "ready" if ready else "not_loaded", "model": "Artemide", "version": __version__, "device": str(_device)}
+    return {
+        "status": "ready" if _model is not None else "not_loaded",
+        "model": "Artemide",
+        "version": __version__,
+        "device": str(_device),
+    }
 
 
 @app.post("/v1/generate")
@@ -53,14 +63,16 @@ def generate(request: GenerateRequest, authorization: str | None = Header(defaul
     try:
         model = _load_model()
         prompt_ids = _tokenizer.encode(request.prompt)
-        if not prompt_ids:
-            raise HTTPException(status_code=400, detail="Prompt tokenized to an empty sequence")
         input_ids = torch.tensor([prompt_ids], dtype=torch.long, device=_device)
         with _lock:
-            output = model.generate(input_ids, request.max_new_tokens, request.temperature, request.top_k)
+            output = model.generate(
+                input_ids, request.max_new_tokens, request.temperature, request.top_k
+            )
         generated = output[0, len(prompt_ids):].tolist()
-        return {"text": _tokenizer.decode(generated), "model": "Artemide", "version": __version__}
-    except HTTPException:
-        raise
+        return {
+            "text": _tokenizer.decode(generated),
+            "model": "Artemide",
+            "version": __version__,
+        }
     except Exception as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
