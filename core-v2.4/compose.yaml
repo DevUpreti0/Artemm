@@ -1,0 +1,24 @@
+services:
+  artemide-api:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${ARTEMIDE_PORT:-8000}:8000"
+    environment:
+      ARTEMIDE_CONFIG: /models/config.json
+      ARTEMIDE_CHECKPOINT: /models/latest.pt
+      ARTEMIDE_KEY_DB: /data/api_keys.sqlite3
+      ARTEMIDE_REQUIRE_API_KEY: "1"
+      ARTEMIDE_API_KEY: ${ARTEMIDE_API_KEY:-}
+      ARTEMIDE_ADMIN_API_KEY: ${ARTEMIDE_ADMIN_API_KEY:?Set ARTEMIDE_ADMIN_API_KEY in .env}
+    volumes:
+      - ./models:/models:ro
+      - artemide-data:/data
+    healthcheck:
+      test: ["CMD","python","-c","import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health',timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+volumes:
+  artemide-data:
